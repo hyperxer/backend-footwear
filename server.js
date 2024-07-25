@@ -9,6 +9,7 @@ dotenv.config();
 
 const app = express();
 
+app.use('/imgproducts', express.static('imgproducts'));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(bodyParser.json());

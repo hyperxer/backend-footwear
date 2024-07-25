@@ -118,9 +118,10 @@ const ProductColor = db.productColor;
 
 exports.create = async (req, res) => {
   const { name, detail, price, brandId, categoryId, sizes , colors } = req.body; // sizes เป็น array ของ object { sizeId, quantity }
+  const prod_img = req.file ? req.file.filename : null;
 
   try {
-    const product = await Product.create({ name, detail, price, brandId, categoryId });
+    const product = await Product.create({ name, detail, price, brandId, categoryId , prod_img });
 
     for (let size of sizes) {
       await ProductSize.create({
@@ -167,4 +168,49 @@ exports.findOne = (req, res) => {
     .catch(err => {
       res.status(500).send({ message: err.message });
     });
+};
+
+exports.getProductDetails = async (req, res) => {
+  const { productId, sizeId, colorId } = req.query; // ใช้ query parameters
+
+  try {
+    // ค้นหาขนาดที่ระบุ
+    const size = await Size.findOne({ where: { id: sizeId } });
+    if (!size) {
+      return res.status(404).send({ message: `Size ${sizeId} not found` });
+    }
+
+    // ค้นหาสีที่ระบุ
+    const color = await Color.findOne({ where: { id: colorId } });
+    if (!color) {
+      return res.status(404).send({ message: `Color ${colorId} not found` });
+    }
+
+    // ค้นหาจำนวนสินค้าตามขนาดและสีที่ระบุ
+    const productSize = await ProductSize.findOne({ 
+      where: { productId, sizeId: size.id }
+    });
+
+    if (!productSize) {
+      return res.status(404).send({ message: `Product with size ${sizeName} not found for product ID ${productId}` });
+    }
+
+    const productColor = await ProductColor.findOne({ 
+      where: { productId, colorId: color.id }
+    });
+
+    if (!productColor) {
+      return res.status(404).send({ message: `Product with color ${colorName} not found for product ID ${productId}` });
+    }
+
+    // ส่งข้อมูลกลับ
+    res.send({
+      productId,
+      sizeName,
+      colorName,
+      quantity: productSize.quantity
+    });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
 };
