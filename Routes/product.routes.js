@@ -5,11 +5,12 @@ module.exports = app => {
     var router = require("express").Router();
   
     router.post("/",upload.single('prod_img'), products.create);
-    // router.get("/", products.findAll);
+    router.get("/", products.findAll);
     router.get("/:id", products.findOne);
     // router.put("/:id", products.update);
     // router.delete("/:id", products.delete);
     router.get('/details', products.getProductDetails);
+    router.get('/search', products.search);
     app.use('/api/products', router);
   };
   

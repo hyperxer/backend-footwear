@@ -25,6 +25,8 @@ require('./Routes/auth.routes.js')(app);
 require('./Routes/brand.routes.js')(app);
 require('./Routes/category.routes.js')(app);
 require('./Routes/review.routes.js')(app);
+require('./Routes/color.routes.js')(app);
+require('./Routes/size.routes.js')(app);
 
 
 const PORT = process.env.PORT || 3001;

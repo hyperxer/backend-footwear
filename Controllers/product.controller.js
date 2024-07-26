@@ -151,24 +151,24 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.findOne = (req, res) => {
-  const id = req.params.id;
+// exports.findOne = (req, res) => {
+//   const id = req.params.id;
 
-  Product.findByPk(id, {
-    include: [
-      { model: Size, through: { attributes: ['quantity'] } } // ดึงข้อมูลไซส์และจำนวนสินค้า
-    ]
-  })
-    .then(product => {
-      if (!product) {
-        return res.status(404).send({ message: "Product not found" });
-      }
-      res.send(product);
-    })
-    .catch(err => {
-      res.status(500).send({ message: err.message });
-    });
-};
+//   Product.findByPk(id, {
+//     include: [
+//       { model: Size, through: { attributes: ['quantity'] } } // ดึงข้อมูลไซส์และจำนวนสินค้า
+//     ]
+//   })
+//     .then(product => {
+//       if (!product) {
+//         return res.status(404).send({ message: "Product not found" });
+//       }
+//       res.send(product);
+//     })
+//     .catch(err => {
+//       res.status(500).send({ message: err.message });
+//     });
+// };
 
 exports.getProductDetails = async (req, res) => {
   const { productId, sizeId, colorId } = req.query; // ใช้ query parameters
@@ -210,6 +210,89 @@ exports.getProductDetails = async (req, res) => {
       colorName,
       quantity: productSize.quantity
     });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+// ดึงข้อมูลสินค้าทั้งหมด
+exports.findAll = async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      include: [
+        { model: Size, through: { attributes: ['quantity'] }, as: 'sizes' },
+        { model: Color, as: 'colors' }
+      ]
+    });
+    res.send(products);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+// ดึงข้อมูลสินค้าตาม ID
+exports.findOne = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const product = await Product.findOne({
+      where: { id },
+      include: [
+        { model: Size, through: { attributes: ['quantity'] }, as: 'sizes' },
+        { model: Color, as: 'colors' }
+      ]
+    });
+
+    if (!product) {
+      return res.status(404).send({ message: `Product with ID ${id} not found` });
+    }
+
+    res.send(product);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.search = async (req, res) => {
+  const { brandId, colorIds, sizeIds, categoryId } = req.query;
+
+  try {
+    const queryOptions = {
+      include: [
+        { model: Size, through: { attributes: ['quantity'] }, as: 'sizes' },
+        { model: Color, as: 'colors' }
+      ],
+      where: {}
+    };
+
+    if (brandId) {
+      queryOptions.where.brandId = brandId;
+    }
+
+    if (categoryId) {
+      queryOptions.where.categoryId = categoryId;
+    }
+
+    const products = await Product.findAll(queryOptions);
+
+    // Filter products by color and size if provided
+    const filteredProducts = products.filter(product => {
+      let match = true;
+
+      if (colorIds) {
+        const colorIdsArray = colorIds.split(',').map(Number);
+        match = product.colors.some(color => colorIdsArray.includes(color.id));
+      }
+
+      if (sizeIds) {
+        const sizeIdsArray = sizeIds.split(',').map(Number);
+        match = match && product.sizes.some(size => sizeIdsArray.includes(size.id));
+      }
+
+      return match;
+    });
+
+    res.send(filteredProducts);
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
