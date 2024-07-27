@@ -1,6 +1,11 @@
 // models/productSize.model.js
 module.exports = (sequelize, Sequelize) => {
     const ProductSize = sequelize.define("productSize", {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
       quantity: {
         type: Sequelize.INTEGER,
         allowNull: false,

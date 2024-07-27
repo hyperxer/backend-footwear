@@ -20,10 +20,10 @@ module.exports = (sequelize, Sequelize) => {
       },
     });
   
-    // ProductColor.associate = (models) => {
-    //   ProductColor.belongsTo(models.Product, { foreignKey: 'productId' });
-    //   ProductColor.belongsTo(models.Color, { foreignKey: 'colorId' });
-    // };
+    ProductColor.associate = (models) => {
+      ProductColor.belongsTo(models.Product, { foreignKey: 'productId' });
+      ProductColor.belongsTo(models.Color, { foreignKey: 'colorId' });
+    };
   
     return ProductColor;
   };
